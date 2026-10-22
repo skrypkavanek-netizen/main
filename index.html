@@ -350,10 +350,14 @@
                 }
 
                 container.innerHTML = places.map((p, idx) => `
-    <div class="card" onclick="openPlaceModal(${idx})">
-       ${(p['Фото (посилання)'] || p['Фото'] || p['Image']) 
-    ? `<img src="${p['Фото (посилання)'] || p['Фото'] || p['Image']}" class="card-img" alt="Фото">` 
-    : ''}
+   const photoUrl = p['Фото (посилання)'] || p['Фото'] || p['Image'];
+const img = document.getElementById('modal-img');
+if (photoUrl && String(photoUrl).trim() !== '') {
+    img.src = photoUrl;
+    img.style.display = 'block';
+} else {
+    img.style.display = 'none';
+}
             <span class="card-badge">${p['Категорія'] || 'Бар / Тусовка'}</span>
             <div class="card-title">${p['Назва закладу'] || p['Назва'] || ''}</div>
             <div class="card-desc">${p['Опис / Вайб'] || p['Опис'] || ''}</div>
