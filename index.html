@@ -361,6 +361,7 @@ if (window.Telegram && window.Telegram.WebApp) {
                             <div class="card-title">${p['Назва закладу'] || p['Назва'] || ''}</div>
                             <div class="card-desc">${p['Опис / Вайб'] || p['Опис'] || ''}</div>
                             <div class="card-meta">📍 ${p['Адреса'] || 'Львів'}</div>
+                            ${(p['Графік'] || p['Час роботи']) ? `<div class="card-meta" style="margin-top: 4px; color: #d084ff;">🕒 ${p['Графік'] || p['Час роботи']}</div>` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -395,9 +396,18 @@ if (window.Telegram && window.Telegram.WebApp) {
             if (!p) return;
 
             document.getElementById('modal-badge').innerText = p['Категорія'] || p['Type'] || 'Заклад';
-            document.getElementById('modal-title').innerText = p['Назва закладу'] || p['Назва'] || p['Заклад'] || p['Name'] || 'Без назви';
-            document.getElementById('modal-meta').innerHTML = `📍 ${p['Адреса'] || 'Львів'}`;
-            document.getElementById('modal-desc').innerText = p['Опис / Вайб'] || p['Опис'] || p['Вайб'] || '';
+    document.getElementById('modal-title').innerText = p['Назва закладу'] || p['Назва'] || p['Заклад'] || p['Name'] || 'Без назви';
+    
+    // Формуємо адресу та графік для модального вікна
+    const address = p['Адреса'] || 'Львів';
+    const schedule = p['Графік'] || p['Час роботи'] || '';
+    let metaHtml = `📍 ${address}`;
+    if (schedule) {
+        metaHtml += `<br>🕒 ${schedule}`;
+    }
+    document.getElementById('modal-meta').innerHTML = metaHtml;
+
+    document.getElementById('modal-desc').innerText = p['Опис / Вайб'] || p['Опис'] || p['Вайб'] || '';
             
             const img = document.getElementById('modal-img');
             const photoUrl = p['Фото (посилання)'] || p['Фото'] || p['Image'];
