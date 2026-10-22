@@ -298,27 +298,30 @@
         let dbData = { Заклади: [], Події: [] };
         let currentTab = 'places';
 
-        // 1. Логування користувача при входу в додаток
-        if (window.Telegram && window.Telegram.WebApp) {
-            const tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-
-            const user = tg.initDataUnsafe?.user;
-            if (user) {
-                const formData = new URLSearchParams();
-                formData.append("id", user.id);
-                formData.append("username", user.username || "не вказано");
-                formData.append("first_name", user.first_name || "не вказано");
-
-                fetch(API_URL, {
-                    method: "POST",
-                    mode: "no-cors",
-                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                    body: formData
-                }).catch(err => console.log("User log error:", err));
-            }
-        }
+        // 1. Логування користувача при вході в додаток
+if (window.Telegram && window.Telegram.WebApp) {
+    const tg = window.Telegram.WebApp;
+    tg.ready();
+    tg.expand();
+    
+    const user = tg.initDataUnsafe?.user;
+    if (user) {
+        fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8',
+            },
+            body: JSON.stringify({
+                action: 'track_user',
+                user: {
+                    id: user.id,
+                    username: user.username || 'не вказано',
+                    first_name: user.first_name || 'не вказано'
+                }
+            })
+        }).catch(err => console.error('Помилка трекінгу юзера:', err));
+    }
+}
 
         // 2. Отримання даних з Google Таблиці
         async function loadData() {
