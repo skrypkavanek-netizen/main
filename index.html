@@ -384,29 +384,36 @@
         }
 
         // 4. Відкриття деталей у модальному вікні
-        function openPlaceModal(idx) {
-            const places = dbData['Заклади'] || [];
+      function openPlaceModal(idx) {
+            const places = dbData['Заклади'] || dbData['заклади'] || dbData['Sheet1'] || (Array.isArray(dbData) ? dbData : []);
             const p = places[idx];
             if (!p) return;
 
-            document.getElementById('modal-badge').innerText = p['Категорія'] || 'Заклад';
-            document.getElementById('modal-title').innerText = p['Назва закладу'] || p['Назва'] || '';
+            document.getElementById('modal-badge').innerText = p['Категорія'] || p['Type'] || 'Заклад';
+            document.getElementById('modal-title').innerText = p['Назва закладу'] || p['Назва'] || p['Заклад'] || p['Name'] || 'Без назви';
             document.getElementById('modal-meta').innerHTML = `📍 ${p['Адреса'] || 'Львів'}`;
-            document.getElementById('modal-desc').innerText = p['Опис / Вайб'] || p['Опис'] || '';
+            document.getElementById('modal-desc').innerText = p['Опис / Вайб'] || p['Опис'] || p['Вайб'] || '';
             
             const img = document.getElementById('modal-img');
-            if (p['Фото (посилання)']) {
-                img.src = p['Фото (посилання)'];
+            const photoUrl = p['Фото (посилання)'] || p['Фото'] || p['Image'];
+            if (photoUrl) {
+                img.src = photoUrl;
                 img.style.display = 'block';
             } else {
                 img.style.display = 'none';
             }
 
             const btn = document.getElementById('modal-btn');
-            const mapUrl = p['Карта'] || p['Посилання на карту'];
-            if (mapUrl) {
+            const mapUrl = p['Карта'] || p['Посилання на карту'] || p['Гугл Карта'] || p['Google Maps'] || p['Map'] || p['Location'];
+
+            if (mapUrl && String(mapUrl).trim() !== '') {
                 btn.href = mapUrl;
                 btn.innerText = '🗺 Відкрити в Google Maps';
+                btn.style.display = 'block';
+            } else if (p['Адреса']) {
+                // Авто-пошук за адресою, якщо посилання не заповнено в таблиці
+                btn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p['Адреса'] + ', Львів')}`;
+                btn.innerText = '🗺 Шукати адресу на карті';
                 btn.style.display = 'block';
             } else {
                 btn.style.display = 'none';
