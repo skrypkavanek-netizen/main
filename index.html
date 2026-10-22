@@ -353,9 +353,9 @@
                     <div class="card" onclick="openPlaceModal(${idx})">
                         ${p['Фото (посилання)'] ? `<img src="${p['Фото (посилання)']}" class="card-img" alt="Фото">` : ''}
                         <div class="card-body">
-                            <span class="card-badge">${p['Категорія'] || 'Бар / Тусовка'}</span>
+                            document.getElementById('modal-desc').innerText = p['Опис / Вайб'] || p['Опис/Вайб'] || p['Опис'] || p['Вайб'] || p['Description'] || '';
                             <div class="card-title">${p['Назва закладу'] || p['Назва'] || ''}</div>
-                            <div class="card-desc">${p['Опис / Вайб'] || p['Опис'] || ''}</div>
+                            <div class="card-desc">${p['Опис / Вайб'] || p['Опис/Вайб'] || p['Опис'] || p['Вайб'] || p['Description'] || ''}</div>
                             <div class="card-meta">📍 ${p['Адреса'] || 'Львів'}</div>
                         </div>
                     </div>
