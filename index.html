@@ -511,9 +511,9 @@
                 map = L.map('map-container').setView([49.842957, 24.031111], 14);
 
                 // Завантажуємо деталізовану темну карту (CartoDB Dark Matter)
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
-                    attribution: '&copy; CartoDB'
+                    attribution: '&copy; OpenStreetMap'
                 }).addTo(map);
 
                 // Обов'язковий перерахунок розміру контейнера
