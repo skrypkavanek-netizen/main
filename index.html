@@ -480,12 +480,100 @@ if (window.Telegram && window.Telegram.WebApp) {
         }
 
         // Перемикач вкладок
+        let map = null;
+
+        // Перемикач вкладок (Заклади / Події / Мапа)
         function switchMainTab(tab) {
             currentTab = tab;
             document.getElementById('tab-places-btn').className = `main-tab-btn ${tab === 'places' ? 'active' : ''}`;
             document.getElementById('tab-events-btn').className = `main-tab-btn ${tab === 'events' ? 'active' : ''}`;
-            document.getElementById('categories-bar').style.display = tab === 'places' ? 'flex' : 'none';
-            renderContent();
+            document.getElementById('tab-map-btn').className = `main-tab-btn ${tab === 'map' ? 'active' : ''}`;
+            
+            document.getElementById('categories-bar').style.display = (tab === 'places' ? 'flex' : 'none');
+            
+            const contentList = document.getElementById('content-list');
+            const mapContainer = document.getElementById('map-container');
+
+            if (tab === 'map') {
+                contentList.style.display = 'none';
+                mapContainer.style.display = 'block';
+                initMap();
+            } else {
+                contentList.style.display = 'grid';
+                mapContainer.style.display = 'none';
+                renderContent();
+            }
+        }
+
+        // Ініціалізація темної карти, геолокації та пінів-закладів
+        function initMap() {
+            const places = dbData['Заклади'] || dbData['заклади'] || [];
+
+            if (!map) {
+                // Центр Львова за замовчуванням
+                map = L.map('map-container').setView([49.842957, 24.031111], 14);
+
+                // Темна підложка карти (Dark Matter)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; CartoDB'
+                }).addTo(map);
+
+                // Визначення поточної геолокації користувача
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const userLat = position.coords.latitude;
+                            const userLng = position.coords.longitude;
+
+                            // Синя мітка «Ви тут»
+                            const userIcon = L.divIcon({
+                                className: 'user-location-marker',
+                                html: '<div style="background:#007aff; width:14px; height:14px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 10px #007aff;"></div>',
+                                iconSize: [14, 14],
+                                iconAnchor: [7, 7]
+                            });
+
+                            L.marker([userLat, userLng], { icon: userIcon })
+                                .addTo(map)
+                                .bindPopup('<b>Ви тут 📍</b>');
+
+                            map.flyTo([userLat, userLng], 15);
+                        },
+                        (err) => console.log('Геолокацію вимкнено або відмовлено')
+                    );
+                }
+            } else {
+                setTimeout(() => map.invalidateSize(), 200);
+            }
+
+            // Очищаємо старі маркери закладів перед оновленням
+            map.eachLayer(layer => {
+                if (layer instanceof L.Marker && !layer.options.icon?.options?.className?.includes('user-location-marker')) {
+                    map.removeLayer(layer);
+                }
+            });
+
+            // Додаємо заклади на мапу як фіолетові кнопки
+            places.forEach((p, idx) => {
+                const lat = parseFloat(p['Широта'] || p['Lat']);
+                const lng = parseFloat(p['Довгота'] || p['Lng']);
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    const venueIcon = L.divIcon({
+                        className: 'venue-marker',
+                        html: `<div style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; padding: 6px 10px; border-radius: 20px; font-weight: bold; font-size: 11px; white-space: nowrap; box-shadow: 0 4px 10px rgba(168,85,247,0.5); border: 1px solid #fff; cursor: pointer;">🍸 ${p['Назва закладу'] || p['Назва']}</div>`,
+                        iconAnchor: [30, 15]
+                    });
+
+                    const marker = L.marker([lat, lng], { icon: venueIcon }).addTo(map);
+
+                    // При кліку на пін відкривається модальне вікно закладу без переходів!
+                    marker.on('click', () => {
+                        openPlaceModal(idx);
+                    });
+                }
+            });
         }
 
         function filterPlaces(category, btn) {
@@ -495,6 +583,3 @@ if (window.Telegram && window.Telegram.WebApp) {
         }
 
         loadData();
-    </script>
-</body>
-</html>
