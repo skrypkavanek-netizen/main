@@ -481,6 +481,7 @@
         // 6. Логіка мапи та вкладок
         let map = null;
 
+        // Перемикач вкладок (Заклади / Події / Мапа)
         function switchMainTab(tab) {
             currentTab = tab;
             document.getElementById('tab-places-btn').className = `main-tab-btn ${tab === 'places' ? 'active' : ''}`;
@@ -503,20 +504,21 @@
             }
         }
 
+        // Ініціалізація карти, геолокації та пінів-закладів
         function initMap() {
             const places = dbData['Заклади'] || dbData['заклади'] || [];
 
             if (!map) {
-                // Центруємо мапу прямо на центрі Львова
+                // Центруємо мапу на центрі Львова
                 map = L.map('map-container').setView([49.842957, 24.031111], 14);
 
-                // Завантажуємо деталізовану темну карту (CartoDB Dark Matter)
+                // Завантажуємо карту без вимоги API-ключа
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
                     attribution: '&copy; OpenStreetMap'
                 }).addTo(map);
 
-                // Обов'язковий перерахунок розміру контейнера
+                // Перерахунок розміру контейнера
                 setTimeout(() => {
                     map.invalidateSize();
                 }, 300);
