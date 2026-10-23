@@ -123,7 +123,7 @@
         }
 
        .card-body {
-            padding: 14px 16px 16px 16px; /* Додали трохи більше простору знизу */
+            padding: 14px 16px 16px 16px;
         }
 
         .card-badge {
@@ -148,7 +148,7 @@
         .card-desc {
             font-size: 13px;
             color: #bfaed9;
-            margin-bottom: 10px; /* Відступ між описом і адресою */
+            margin-bottom: 10px;
             line-height: 1.4;
             display: -webkit-box;
             -webkit-line-clamp: 2;
@@ -162,10 +162,10 @@
             display: flex;
             align-items: center;
             gap: 4px;
-            margin-top: 6px; /* Робимо невеликий повітряний відступ зверху від адреси */
+            margin-top: 6px;
         }
 
-        /* Модальне вікно (Окремий перегляд закладу/події) */
+        /* Модальне вікно */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -274,13 +274,15 @@
         <button class="cat-btn" onclick="filterPlaces('Стендап', this)">🎤 Шоу / Стендап</button>
     </div>
 
-    <!-- Контейнер для карток -->
+    <!-- Контейнер для карти -->
     <div id="map-container" style="display: none; width: 100%; height: 75vh; border-radius: 16px; border: 1px solid rgba(187, 107, 255, 0.2); overflow: hidden; position: relative;"></div>
+    
+    <!-- Контейнер для списку карток -->
     <div id="content-list" class="cards-grid">
         <div class="loader">⏳ Завантаження тусовок...</div>
     </div>
 
-    <!-- Модальне вікно (Деталі закладу) -->
+    <!-- Модальне вікно -->
     <div id="modal" class="modal-overlay" onclick="closeModal(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
@@ -296,36 +298,35 @@
     </div>
 
     <script>
-        // 👇 ВСТАВТЕ СВОЄ ПОСИЛАННЯ З GOOGLE APPS SCRIPT (що закінчується на /exec)
         const API_URL = "https://script.google.com/macros/s/AKfycbzHkKm2jhWes-KrKUcY5w7Yq5gCvp4ELum8sprFGfER20Tl6Ar2t21ghziV_M8AUUcBbg/exec";
 
         let dbData = { Заклади: [], Події: [] };
         let currentTab = 'places';
 
-        // 1. Логування користувача при вході в додаток
-if (window.Telegram && window.Telegram.WebApp) {
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
-    
-    const user = tg.initDataUnsafe?.user;
-    if (user) {
-        fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8',
-            },
-            body: JSON.stringify({
-                action: 'track_user',
-                user: {
-                    id: user.id,
-                    username: user.username || 'не вказано',
-                    first_name: user.first_name || 'не вказано'
-                }
-            })
-        }).catch(err => console.error('Помилка трекінгу юзера:', err));
-    }
-}
+        // 1. Логування користувача
+        if (window.Telegram && window.Telegram.WebApp) {
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+            
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        action: 'track_user',
+                        user: {
+                            id: user.id,
+                            username: user.username || 'не вказано',
+                            first_name: user.first_name || 'не вказано'
+                        }
+                    })
+                }).catch(err => console.error('Помилка трекінгу юзера:', err));
+            }
+        }
 
         // 2. Отримання даних з Google Таблиці
         async function loadData() {
@@ -370,7 +371,6 @@ if (window.Telegram && window.Telegram.WebApp) {
                     </div>
                 `).join('');
 
-
             } else {
                 const events = dbData['Події'] || [];
 
@@ -393,25 +393,24 @@ if (window.Telegram && window.Telegram.WebApp) {
             }
         }
 
-        // 4. Відкриття деталей у модальному вікні
-      function openPlaceModal(idx) {
-            const places = dbData['Заклади'] || dbData['заклади'] || dbData['Sheet1'] || (Array.isArray(dbData) ? dbData : []);
+        // 4. Відкриття деталей закладу у модальному вікні
+        function openPlaceModal(idx) {
+            const places = dbData['Заклади'] || dbData['заклади'] || [];
             const p = places[idx];
             if (!p) return;
 
             document.getElementById('modal-badge').innerText = p['Категорія'] || p['Type'] || 'Заклад';
-    document.getElementById('modal-title').innerText = p['Назва закладу'] || p['Назва'] || p['Заклад'] || p['Name'] || 'Без назви';
-    
-    // Формуємо адресу та графік для модального вікна
-    const address = p['Адреса'] || 'Львів';
-    const schedule = p['Графік'] || p['Час роботи'] || '';
-    let metaHtml = `📍 ${address}`;
-    if (schedule) {
-        metaHtml += `<br>🕒 ${schedule}`;
-    }
-    document.getElementById('modal-meta').innerHTML = metaHtml;
+            document.getElementById('modal-title').innerText = p['Назва закладу'] || p['Назва'] || 'Без назви';
+            
+            const address = p['Адреса'] || 'Львів';
+            const schedule = p['Графік'] || p['Час роботи'] || '';
+            let metaHtml = `📍 ${address}`;
+            if (schedule) {
+                metaHtml += `<br>🕒 ${schedule}`;
+            }
+            document.getElementById('modal-meta').innerHTML = metaHtml;
 
-    document.getElementById('modal-desc').innerText = p['Опис / Вайб'] || p['Опис'] || p['Вайб'] || '';
+            document.getElementById('modal-desc').innerText = p['Опис / Вайб'] || p['Опис'] || '';
             
             const img = document.getElementById('modal-img');
             const photoUrl = p['Фото (посилання)'] || p['Фото'] || p['Image'];
@@ -423,14 +422,13 @@ if (window.Telegram && window.Telegram.WebApp) {
             }
 
             const btn = document.getElementById('modal-btn');
-            const mapUrl = p['Карта'] || p['Посилання на карту'] || p['Гугл Карта'] || p['Google Maps'] || p['Map'] || p['Location'];
+            const mapUrl = p['Карта'] || p['Посилання на карту'] || p['Google Maps'];
 
             if (mapUrl && String(mapUrl).trim() !== '') {
                 btn.href = mapUrl;
                 btn.innerText = '🗺 Відкрити в Google Maps';
                 btn.style.display = 'block';
             } else if (p['Адреса']) {
-                // Авто-пошук за адресою, якщо посилання не заповнено в таблиці
                 btn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p['Адреса'] + ', Львів')}`;
                 btn.innerText = '🗺 Шукати адресу на карті';
                 btn.style.display = 'block';
@@ -441,6 +439,7 @@ if (window.Telegram && window.Telegram.WebApp) {
             document.getElementById('modal').classList.add('open');
         }
 
+        // 5. Відкриття деталей події у модальному вікні
         function openEventModal(idx) {
             const events = dbData['Події'] || [];
             const e = events[idx];
@@ -479,10 +478,9 @@ if (window.Telegram && window.Telegram.WebApp) {
             }
         }
 
-        // Перемикач вкладок
+        // 6. Логіка мапи та вкладок
         let map = null;
 
-        // Перемикач вкладок (Заклади / Події / Мапа)
         function switchMainTab(tab) {
             currentTab = tab;
             document.getElementById('tab-places-btn').className = `main-tab-btn ${tab === 'places' ? 'active' : ''}`;
@@ -505,28 +503,23 @@ if (window.Telegram && window.Telegram.WebApp) {
             }
         }
 
-        // Ініціалізація темної карти, геолокації та пінів-закладів
         function initMap() {
             const places = dbData['Заклади'] || dbData['заклади'] || [];
 
             if (!map) {
-                // Центр Львова за замовчуванням
                 map = L.map('map-container').setView([49.842957, 24.031111], 14);
 
-                // Темна підложка карти (Dark Matter)
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                     maxZoom: 19,
                     attribution: '&copy; CartoDB'
                 }).addTo(map);
 
-                // Визначення поточної геолокації користувача
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             const userLat = position.coords.latitude;
                             const userLng = position.coords.longitude;
 
-                            // Синя мітка «Ви тут»
                             const userIcon = L.divIcon({
                                 className: 'user-location-marker',
                                 html: '<div style="background:#007aff; width:14px; height:14px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 10px #007aff;"></div>',
@@ -547,14 +540,12 @@ if (window.Telegram && window.Telegram.WebApp) {
                 setTimeout(() => map.invalidateSize(), 200);
             }
 
-            // Очищаємо старі маркери закладів перед оновленням
             map.eachLayer(layer => {
                 if (layer instanceof L.Marker && !layer.options.icon?.options?.className?.includes('user-location-marker')) {
                     map.removeLayer(layer);
                 }
             });
 
-            // Додаємо заклади на мапу як фіолетові кнопки
             places.forEach((p, idx) => {
                 const lat = parseFloat(p['Широта'] || p['Lat']);
                 const lng = parseFloat(p['Довгота'] || p['Lng']);
@@ -568,7 +559,6 @@ if (window.Telegram && window.Telegram.WebApp) {
 
                     const marker = L.marker([lat, lng], { icon: venueIcon }).addTo(map);
 
-                    // При кліку на пін відкривається модальне вікно закладу без переходів!
                     marker.on('click', () => {
                         openPlaceModal(idx);
                     });
@@ -583,3 +573,6 @@ if (window.Telegram && window.Telegram.WebApp) {
         }
 
         loadData();
+    </script>
+</body>
+</html>
