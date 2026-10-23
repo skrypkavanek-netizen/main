@@ -514,10 +514,9 @@
 
                 // Завантажуємо карту без вимоги API-ключа
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap'
-                }).addTo(map);
-
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap'
+}).addTo(map);
                 // Перерахунок розміру контейнера
                 setTimeout(() => {
                     map.invalidateSize();
