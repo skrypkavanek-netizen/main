@@ -507,13 +507,22 @@
             const places = dbData['Заклади'] || dbData['заклади'] || [];
 
             if (!map) {
+                // Центруємо мапу прямо на центрі Львова
                 map = L.map('map-container').setView([49.842957, 24.031111], 14);
 
+                // Завантажуємо деталізовану темну карту (CartoDB Dark Matter)
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                     maxZoom: 19,
+                    subdomains: 'abcd',
                     attribution: '&copy; CartoDB'
                 }).addTo(map);
 
+                // Обов'язковий перерахунок розміру контейнера
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 300);
+
+                // Визначення геолокації користувача у Львові
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
@@ -537,15 +546,19 @@
                     );
                 }
             } else {
-                setTimeout(() => map.invalidateSize(), 200);
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 200);
             }
 
+            // Очищаємо старі піни закладів
             map.eachLayer(layer => {
                 if (layer instanceof L.Marker && !layer.options.icon?.options?.className?.includes('user-location-marker')) {
                     map.removeLayer(layer);
                 }
             });
 
+            // Додаємо заклади Львова на мапу
             places.forEach((p, idx) => {
                 const lat = parseFloat(p['Широта'] || p['Lat']);
                 const lng = parseFloat(p['Довгота'] || p['Lng']);
