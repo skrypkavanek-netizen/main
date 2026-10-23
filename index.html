@@ -481,51 +481,28 @@
         // 6. Логіка мапи та вкладок
         let map = null;
 
-        // Перемикач вкладок (Заклади / Події / Мапа)
-        function switchMainTab(tab) {
-            currentTab = tab;
-            document.getElementById('tab-places-btn').className = `main-tab-btn ${tab === 'places' ? 'active' : ''}`;
-            document.getElementById('tab-events-btn').className = `main-tab-btn ${tab === 'events' ? 'active' : ''}`;
-            document.getElementById('tab-map-btn').className = `main-tab-btn ${tab === 'map' ? 'active' : ''}`;
-            
-            document.getElementById('categories-bar').style.display = (tab === 'places' ? 'flex' : 'none');
-            
-            const contentList = document.getElementById('content-list');
-            const mapContainer = document.getElementById('map-container');
-
-            if (tab === 'map') {
-                contentList.style.display = 'none';
-                mapContainer.style.display = 'block';
-                initMap();
-            } else {
-                contentList.style.display = 'grid';
-                mapContainer.style.display = 'none';
-                renderContent();
-            }
-        }
-
         // Ініціалізація карти, геолокації та пінів-закладів
         function initMap() {
             const places = dbData['Заклади'] || dbData['заклади'] || [];
 
             if (!map) {
-                // Центруємо мапу на центрі Львова
+                // Створюємо мапу
                 map = L.map('map-container', {
-                    zoomControl: false 
+                    zoomControl: true
                 }).setView([49.842957, 24.031111], 14);
 
-                // Надійне дзеркало OSM — завантажується завжди без блокувань
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                // 100% безкоштовна та надійна карта Esri World Street Map (працює завжди без блокувань)
+                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
                     maxZoom: 19,
-                    attribution: '&copy; OpenStreetMap'
+                    attribution: 'Tiles &copy; Esri'
                 }).addTo(map);
 
-                // Перерахунок розміру контейнера
+                // Примусовий оновлювач розмірів (щоб сірий екран зник)
                 setTimeout(() => {
                     map.invalidateSize();
-                }, 300);
+                }, 200);
 
-                // Визначення геолокації користувача у Львові
+                // Геолокація користувача
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
@@ -542,53 +519,59 @@
                             L.marker([userLat, userLng], { icon: userIcon })
                                 .addTo(map)
                                 .bindPopup('<b>Ви тут 📍</b>');
-
-                            map.flyTo([userLat, userLng], 15);
                         },
-                        (err) => console.log('Геолокацію вимкнено або відмовлено')
+                        (err) => console.log('Геолокацію вимкнено')
                     );
                 }
             } else {
                 setTimeout(() => {
                     map.invalidateSize();
-                }, 200);
+                }, 100);
             }
 
-            // Очищаємо старі піни закладів перед оновленням
+            // Очищаємо старі маркери
             map.eachLayer(layer => {
                 if (layer instanceof L.Marker && !layer.options.icon?.options?.className?.includes('user-location-marker')) {
                     map.removeLayer(layer);
                 }
             });
 
-            // ДОДАЄМО ВИКЛЮЧНО ВАШІ ЗАКЛАДИ З ТАБЛИЦІ
+            // РЕНДЕР ЗАКЛАДІВ (З гнучким пошуком координат з Google Таблиці)
+            let markersCount = 0;
+
             places.forEach((p, idx) => {
-                const lat = parseFloat(p['Широта'] || p['Lat']);
-                const lng = parseFloat(p['Довгота'] || p['Lng']);
+                // Шукаємо координати за різними можливими назвами колонок у вашій таблиці
+                const rawLat = p['Широта'] || p['Lat'] || p['lat'] || p['latitude'] || p['Координати'];
+                const rawLng = p['Довгота'] || p['Lng'] || p['lng'] || p['longitude'];
+
+                let lat = parseFloat(rawLat);
+                let lng = parseFloat(rawLng);
+
+                // Якщо координати записані в один стовпчик через кому (наприклад "49.8429, 24.0311")
+                if (isNaN(lat) && typeof rawLat === 'string' && rawLat.includes(',')) {
+                    const parts = rawLat.split(',');
+                    lat = parseFloat(parts[0]);
+                    lng = parseFloat(parts[1]);
+                }
 
                 if (!isNaN(lat) && !isNaN(lng)) {
+                    markersCount++;
                     const venueIcon = L.divIcon({
                         className: 'venue-marker',
-                        html: `<div style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; padding: 6px 10px; border-radius: 20px; font-weight: bold; font-size: 11px; white-space: nowrap; box-shadow: 0 4px 10px rgba(168,85,247,0.5); border: 1px solid #fff; cursor: pointer;">🍸 ${p['Назва закладу'] || p['Назва']}</div>`,
+                        html: `<div style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; padding: 6px 10px; border-radius: 20px; font-weight: bold; font-size: 11px; white-space: nowrap; box-shadow: 0 4px 10px rgba(168,85,247,0.6); border: 1px solid #fff; cursor: pointer;">🍸 ${p['Назва закладу'] || p['Назва'] || 'Заклад'}</div>`,
                         iconAnchor: [30, 15]
                     });
 
                     const marker = L.marker([lat, lng], { icon: venueIcon }).addTo(map);
 
-                    // При кліку відкриваються ваші модальні деталі з таблиці
                     marker.on('click', () => {
                         openPlaceModal(idx);
                     });
                 }
             });
-        }
 
-        function filterPlaces(category, btn) {
-            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            renderContent(category);
+            console.log(`Відображено закладів на мапі: ${markersCount}`);
         }
-
         loadData();
     </script>
 </body>
