@@ -122,7 +122,7 @@
             display: block;
         }
 
-       .card-body {
+        .card-body {
             padding: 14px 16px 16px 16px;
         }
 
@@ -511,10 +511,10 @@
             if (!map) {
                 // Центруємо мапу на центрі Львова
                 map = L.map('map-container', {
-                    zoomControl: false // Прибираємо стандартніплюс-мінус, якщо хочете мінімалізму (або залиште, якщо зручно)
+                    zoomControl: false 
                 }).setView([49.842957, 24.031111], 14);
 
-                // Додаємо чисту мінімалістичну світлу/нейтральну карту (або CartoDB Positron / Voyager без POI)
+                // Завантажуємо чисту підложку CartoDB Voyager без зайвого шуму
                 L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
                     maxZoom: 19,
                     attribution: '&copy; CartoDB'
@@ -575,7 +575,7 @@
 
                     const marker = L.marker([lat, lng], { icon: venueIcon }).addTo(map);
 
-                    // При кліку відкривається ваші модальні деталі з таблиці
+                    // При кліку відкриваються ваші модальні деталі з таблиці
                     marker.on('click', () => {
                         openPlaceModal(idx);
                     });
