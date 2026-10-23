@@ -481,28 +481,45 @@
         // 6. Логіка мапи та вкладок
         let map = null;
 
-        // Ініціалізація карти, геолокації та пінів-закладів
+        function switchMainTab(tab) {
+            currentTab = tab;
+            document.getElementById('tab-places-btn').className = `main-tab-btn ${tab === 'places' ? 'active' : ''}`;
+            document.getElementById('tab-events-btn').className = `main-tab-btn ${tab === 'events' ? 'active' : ''}`;
+            document.getElementById('tab-map-btn').className = `main-tab-btn ${tab === 'map' ? 'active' : ''}`;
+            
+            document.getElementById('categories-bar').style.display = (tab === 'places' ? 'flex' : 'none');
+            
+            const contentList = document.getElementById('content-list');
+            const mapContainer = document.getElementById('map-container');
+
+            if (tab === 'map') {
+                contentList.style.display = 'none';
+                mapContainer.style.display = 'block';
+                initMap();
+            } else {
+                contentList.style.display = 'grid';
+                mapContainer.style.display = 'none';
+                renderContent();
+            }
+        }
+
         function initMap() {
             const places = dbData['Заклади'] || dbData['заклади'] || [];
 
             if (!map) {
-                // Створюємо мапу
                 map = L.map('map-container', {
                     zoomControl: true
                 }).setView([49.842957, 24.031111], 14);
 
-                // 100% безкоштовна та надійна карта Esri World Street Map (працює завжди без блокувань)
                 L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
                     maxZoom: 19,
                     attribution: 'Tiles &copy; Esri'
                 }).addTo(map);
 
-                // Примусовий оновлювач розмірів (щоб сірий екран зник)
                 setTimeout(() => {
                     map.invalidateSize();
                 }, 200);
 
-                // Геолокація користувача
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
@@ -529,25 +546,21 @@
                 }, 100);
             }
 
-            // Очищаємо старі маркери
             map.eachLayer(layer => {
                 if (layer instanceof L.Marker && !layer.options.icon?.options?.className?.includes('user-location-marker')) {
                     map.removeLayer(layer);
                 }
             });
 
-            // РЕНДЕР ЗАКЛАДІВ (З гнучким пошуком координат з Google Таблиці)
             let markersCount = 0;
 
             places.forEach((p, idx) => {
-                // Шукаємо координати за різними можливими назвами колонок у вашій таблиці
                 const rawLat = p['Широта'] || p['Lat'] || p['lat'] || p['latitude'] || p['Координати'];
                 const rawLng = p['Довгота'] || p['Lng'] || p['lng'] || p['longitude'];
 
                 let lat = parseFloat(rawLat);
                 let lng = parseFloat(rawLng);
 
-                // Якщо координати записані в один стовпчик через кому (наприклад "49.8429, 24.0311")
                 if (isNaN(lat) && typeof rawLat === 'string' && rawLat.includes(',')) {
                     const parts = rawLat.split(',');
                     lat = parseFloat(parts[0]);
@@ -572,6 +585,13 @@
 
             console.log(`Відображено закладів на мапі: ${markersCount}`);
         }
+
+        function filterPlaces(category, btn) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderContent(category);
+        }
+
         loadData();
     </script>
 </body>
