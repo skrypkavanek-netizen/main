@@ -180,16 +180,16 @@
             transform: translate(-50%, -100%);
         }
 
-        /* Маленька іконка (тільки емодзі) */
+        /* Маленька іконка (тільки смайлики) */
         .pin-small {
             background: linear-gradient(135deg, #a855f7, #7e22ce);
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 15px;
+            font-size: 14px;
             box-shadow: 0 4px 12px rgba(168, 85, 247, 0.6);
             border: 2px solid #ffffff;
             position: relative;
@@ -208,7 +208,7 @@
             border-color: #7e22ce transparent transparent transparent;
         }
 
-        /* Велика кнопка з назвою */
+        /* Велика кнопка з назвою та смайликами */
         .pin-large {
             background: linear-gradient(135deg, #a855f7, #7e22ce);
             color: #ffffff;
@@ -551,7 +551,7 @@
             }
         }
 
-        // 6. Логіка мапи та динамічних маркерів за категоріями
+        // 6. Логіка мапи та динамічних маркерів
         let map = null;
         let placeMarkers = [];
 
@@ -583,21 +583,20 @@
             }
         }
 
-        // Отримуємо смайлики прямо з колонки "Іконка" або "Смайлик" в таблиці
+        // Отримуємо смайлики (або один, або два) з таблиці
         function getCategoryIcon(placeData) {
-            // Перевіряємо стовпчик з іконкою
             const customIcon = placeData['Іконка'] || placeData['Смайлик'] || placeData['Emoji'];
             
             if (customIcon && String(customIcon).trim() !== '') {
-                return String(customIcon).trim(); // Поверне обидва ваші смайлики (наприклад, "🍻🎤")
+                return String(customIcon).trim();
             }
             
-            return '🍸'; // Значок за замовчуванням, якщо стовпчик порожній
+            return '🍸';
         }
-            
-        // Створення HTML-коду маркера відповідно до масштабного рівня та категорії
-        function createMarkerHtml(venueName, category, isLarge) {
-            const icon = getCategoryIcon(category);
+
+        // Створення HTML-коду маркера (передаємо об'єкт закладу p)
+        function createMarkerHtml(venueName, placeData, isLarge) {
+            const icon = getCategoryIcon(placeData);
             
             if (isLarge) {
                 return `
@@ -614,13 +613,13 @@
             }
         }
 
-        // Оновлення вигляду маркерів залежно від зуму карти
+        // Оновлення вигляду маркерів залежно від зуму карти (зум 17)
         function updateMarkersZoom() {
             if (!map) return;
             const isLarge = map.getZoom() >= 17;
 
             placeMarkers.forEach(item => {
-                const newHtml = createMarkerHtml(item.name, item.category, isLarge);
+                const newHtml = createMarkerHtml(item.name, item.placeData, isLarge);
                 const newIcon = L.divIcon({
                     className: 'venue-marker',
                     html: newHtml,
@@ -672,9 +671,9 @@
             placeMarkers.forEach(item => map.removeLayer(item.marker));
             placeMarkers = [];
 
-            const isLarge = map.getZoom() >= 15;
+            const isLarge = map.getZoom() >= 17;
 
-            // Рендер закладів з врахуванням їх категорії
+            // Рендер закладів
             places.forEach((p, idx) => {
                 const rawLat = p['Широта'] || p['Lat'] || p['lat'] || p['latitude'] || p['Координати'];
                 const rawLng = p['Довгота'] || p['Lng'] || p['lng'] || p['longitude'];
@@ -690,11 +689,10 @@
 
                 if (!isNaN(lat) && !isNaN(lng)) {
                     const venueName = p['Назва закладу'] || p['Назва'] || 'Заклад';
-                    const category = p['Категорія'] || p['Опис / Вайб'] || '';
                     
                     const venueIcon = L.divIcon({
                         className: 'venue-marker',
-                        html: createMarkerHtml(venueName, category, isLarge),
+                        html: createMarkerHtml(venueName, p, isLarge),
                         iconAnchor: [0, 0]
                     });
 
@@ -704,7 +702,7 @@
                         openPlaceModal(idx);
                     });
 
-                    placeMarkers.push({ marker, name: venueName, category });
+                    placeMarkers.push({ marker, name: venueName, placeData: p });
                 }
             });
         }
