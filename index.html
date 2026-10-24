@@ -495,7 +495,12 @@
             if (tab === 'map') {
                 contentList.style.display = 'none';
                 mapContainer.style.display = 'block';
-                initMap();
+                
+                // Тайм-аут гарантує, що контейнер розгорнувся перед завантаженням тайлів
+                setTimeout(() => {
+                    initMap();
+                    if (map) map.invalidateSize();
+                }, 100);
             } else {
                 contentList.style.display = 'grid';
                 mapContainer.style.display = 'none';
@@ -503,22 +508,21 @@
             }
         }
 
+        // Ініціалізація безкоштовної чистої темної карти CartoDB Dark Matter
         function initMap() {
             const places = dbData['Заклади'] || dbData['заклади'] || [];
 
             if (!map) {
                 map = L.map('map-container', {
-                    zoomControl: true
+                    zoomControl: false
                 }).setView([49.842957, 24.031111], 14);
 
-                L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+                // Чорна стильна підкладка без сторонніх POI/магазинів (абсолютно безкоштовно та без ключів)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                     maxZoom: 19,
-                    attribution: 'Tiles &copy; Esri'
+                    subdomains: 'abcd',
+                    attribution: '&copy; CARTO'
                 }).addTo(map);
-
-                setTimeout(() => {
-                    map.invalidateSize();
-                }, 200);
 
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(
@@ -540,20 +544,16 @@
                         (err) => console.log('Геолокацію вимкнено')
                     );
                 }
-            } else {
-                setTimeout(() => {
-                    map.invalidateSize();
-                }, 100);
             }
 
+            // Очищаємо старі маркери перед оновленням
             map.eachLayer(layer => {
                 if (layer instanceof L.Marker && !layer.options.icon?.options?.className?.includes('user-location-marker')) {
                     map.removeLayer(layer);
                 }
             });
 
-            let markersCount = 0;
-
+            // Нанесення тільки ваших закладів з Google Таблиці
             places.forEach((p, idx) => {
                 const rawLat = p['Широта'] || p['Lat'] || p['lat'] || p['latitude'] || p['Координати'];
                 const rawLng = p['Довгота'] || p['Lng'] || p['lng'] || p['longitude'];
@@ -568,7 +568,6 @@
                 }
 
                 if (!isNaN(lat) && !isNaN(lng)) {
-                    markersCount++;
                     const venueIcon = L.divIcon({
                         className: 'venue-marker',
                         html: `<div style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; padding: 6px 10px; border-radius: 20px; font-weight: bold; font-size: 11px; white-space: nowrap; box-shadow: 0 4px 10px rgba(168,85,247,0.6); border: 1px solid #fff; cursor: pointer;">🍸 ${p['Назва закладу'] || p['Назва'] || 'Заклад'}</div>`,
@@ -582,8 +581,6 @@
                     });
                 }
             });
-
-            console.log(`Відображено закладів на мапі: ${markersCount}`);
         }
 
         function filterPlaces(category, btn) {
