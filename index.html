@@ -238,6 +238,40 @@
             border-color: #7e22ce transparent transparent transparent;
         }
 
+        /* Стилі для списку подій у модалці закладу */
+        .venue-events-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(187, 107, 255, 0.2);
+        }
+
+        .venue-events-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #d084ff;
+            margin-bottom: 10px;
+        }
+
+        .venue-event-item {
+            background: rgba(35, 18, 56, 0.6);
+            border: 1px solid rgba(187, 107, 255, 0.15);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+
+        .venue-event-name {
+            font-weight: bold;
+            font-size: 13px;
+            color: #ffffff;
+        }
+
+        .venue-event-time {
+            font-size: 11px;
+            color: #a855f7;
+            margin-top: 2px;
+        }
+
         /* Модальне вікно */
         .modal-overlay {
             position: fixed;
@@ -366,6 +400,10 @@
             <h2 id="modal-title" style="margin-bottom: 8px; color: #fff;"></h2>
             <div id="modal-meta" class="card-meta" style="margin-bottom: 12px;"></div>
             <p id="modal-desc" style="color: #bfaed9; font-size: 14px; line-height: 1.5;"></p>
+            
+            <!-- Контейнер для списку подій закладу -->
+            <div id="modal-events-list"></div>
+
             <a id="modal-btn" href="#" target="_blank" class="btn-action" style="display:none;">🗺 Відкрити в Google Maps</a>
         </div>
     </div>
@@ -485,6 +523,33 @@
 
             document.getElementById('modal-desc').innerText = p['Опис / Вайб'] || p['Опис'] || '';
             
+            // Пошук та виведення подій цього закладу
+            const venueName = (p['Назва закладу'] || p['Назва'] || '').toLowerCase().trim();
+            const allEvents = dbData['Події'] || [];
+            
+            const venueEvents = allEvents.filter(e => {
+                const eventVenue = String(e['Заклад'] || e['Локація'] || '').toLowerCase().trim();
+                return eventVenue !== '' && (eventVenue.includes(venueName) || venueName.includes(eventVenue));
+            });
+
+            const eventsContainer = document.getElementById('modal-events-list');
+
+            if (venueEvents.length > 0) {
+                eventsContainer.innerHTML = `
+                    <div class="venue-events-section">
+                        <div class="venue-events-title">🎉 Афіша подій у закладі:</div>
+                        ${venueEvents.map(e => `
+                            <div class="venue-event-item">
+                                <div class="venue-event-name">${e['Назва події'] || e['Назва'] || ''}</div>
+                                <div class="venue-event-time">📅 ${e['Дата та час'] || 'Незабаром'}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                eventsContainer.innerHTML = '';
+            }
+
             const img = document.getElementById('modal-img');
             const photoUrl = p['Фото (посилання)'] || p['Фото'] || p['Image'];
             if (photoUrl) {
@@ -522,6 +587,7 @@
             document.getElementById('modal-title').innerText = e['Назва події'] || e['Назва'] || '';
             document.getElementById('modal-meta').innerHTML = `🏛 ${e['Заклад'] || e['Локація'] || ''}`;
             document.getElementById('modal-desc').innerText = e['Опис події'] || e['Опис'] || '';
+            document.getElementById('modal-events-list').innerHTML = ''; // Очищаємо події для звичайної події
 
             const img = document.getElementById('modal-img');
             const photoUrl = e['Афіша (посилання)'] || e['Фото'];
@@ -583,7 +649,7 @@
             }
         }
 
-        // Отримуємо смайлики (або один, або два) з таблиці
+        // Отримуємо смайлики з таблиці
         function getCategoryIcon(placeData) {
             const customIcon = placeData['Іконка'] || placeData['Смайлик'] || placeData['Emoji'];
             
@@ -594,7 +660,7 @@
             return '🍸';
         }
 
-        // Створення HTML-коду маркера (передаємо об'єкт закладу p)
+        // Створення HTML-коду маркера
         function createMarkerHtml(venueName, placeData, isLarge) {
             const icon = getCategoryIcon(placeData);
             
