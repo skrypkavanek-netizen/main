@@ -616,7 +616,7 @@
         // Оновлення вигляду маркерів залежно від зуму карти
         function updateMarkersZoom() {
             if (!map) return;
-            const isLarge = map.getZoom() >= 17;
+            const isLarge = map.getZoom() >= 25;
 
             placeMarkers.forEach(item => {
                 const newHtml = createMarkerHtml(item.name, item.category, isLarge);
