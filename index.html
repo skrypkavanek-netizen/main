@@ -165,6 +165,11 @@
             margin-top: 6px;
         }
 
+        /* Стилізація темної карти */
+        .dark-tiles {
+            filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3);
+        }
+
         /* Модальне вікно */
         .modal-overlay {
             position: fixed;
@@ -496,11 +501,13 @@
                 contentList.style.display = 'none';
                 mapContainer.style.display = 'block';
                 
-                // Тайм-аут гарантує, що контейнер розгорнувся перед завантаженням тайлів
+                // Тайм-аут гарантує, що контейнер розгорнувся перед ініціалізацією та розрахунком розміру
                 setTimeout(() => {
                     initMap();
-                    if (map) map.invalidateSize();
-                }, 100);
+                    if (map) {
+                        map.invalidateSize();
+                    }
+                }, 150);
             } else {
                 contentList.style.display = 'grid';
                 mapContainer.style.display = 'none';
@@ -508,20 +515,20 @@
             }
         }
 
-        // Ініціалізація безкоштовної чистої темної карти CartoDB Dark Matter
+        // Надійне завантаження карти OpenStreetMap із стилізацією під темну тему
         function initMap() {
             const places = dbData['Заклади'] || dbData['заклади'] || [];
 
             if (!map) {
                 map = L.map('map-container', {
-                    zoomControl: false
+                    zoomControl: true
                 }).setView([49.842957, 24.031111], 14);
 
-                // Чорна стильна підкладка без сторонніх POI/магазинів (абсолютно безкоштовно та без ключів)
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                // Офіційне дзеркало OpenStreetMap (завантажується без блокувань)
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
-                    subdomains: 'abcd',
-                    attribution: '&copy; CARTO'
+                    className: 'dark-tiles',
+                    attribution: '&copy; OpenStreetMap'
                 }).addTo(map);
 
                 if (navigator.geolocation) {
@@ -546,14 +553,14 @@
                 }
             }
 
-            // Очищаємо старі маркери перед оновленням
+            // Очищаємо старі маркери
             map.eachLayer(layer => {
                 if (layer instanceof L.Marker && !layer.options.icon?.options?.className?.includes('user-location-marker')) {
                     map.removeLayer(layer);
                 }
             });
 
-            // Нанесення тільки ваших закладів з Google Таблиці
+            // Рендер закладів із гнучким зчитуванням колонок з Google Таблиці
             places.forEach((p, idx) => {
                 const rawLat = p['Широта'] || p['Lat'] || p['lat'] || p['latitude'] || p['Координати'];
                 const rawLng = p['Довгота'] || p['Lng'] || p['lng'] || p['longitude'];
