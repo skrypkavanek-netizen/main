@@ -583,17 +583,18 @@
             }
         }
 
-        // Отримуємо смайлик прямо з колонки "Смайлик" (або "Іконка") в таблиці
+        // Отримуємо смайлики прямо з колонки "Іконка" або "Смайлик" в таблиці
         function getCategoryIcon(placeData) {
-            // Перевіряємо різні можливі назви колонки у вашій таблиці
-            const customIcon = placeData['Смайлик'] || placeData['Іконка'] || placeData['Emoji'];
+            // Перевіряємо стовпчик з іконкою
+            const customIcon = placeData['Іконка'] || placeData['Смайлик'] || placeData['Emoji'];
             
             if (customIcon && String(customIcon).trim() !== '') {
-                return String(customIcon).trim();
+                return String(customIcon).trim(); // Поверне обидва ваші смайлики (наприклад, "🍻🎤")
             }
             
             return '🍸'; // Значок за замовчуванням, якщо стовпчик порожній
         }
+            
         // Створення HTML-коду маркера відповідно до масштабного рівня та категорії
         function createMarkerHtml(venueName, category, isLarge) {
             const icon = getCategoryIcon(category);
