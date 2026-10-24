@@ -586,44 +586,7 @@
                             display: inline-block;
                             text-align: center;
                         ">🍸 ${venueName}</div>`,
-                        // Автоматичне центрування якоря відносно плашки, щоб координата точно вказувала на центр знизу
                         iconAnchor: [60, 32] 
-                    });
-
-                    const marker = L.marker([lat, lng], { icon: venueIcon }).addTo(map);
-
-                    marker.on('click', () => {
-                        openPlaceModal(idx);
-                    });
-                }
-            });
-        }
-            // Очищаємо старі маркери
-            map.eachLayer(layer => {
-                if (layer instanceof L.Marker && !layer.options.icon?.options?.className?.includes('user-location-marker')) {
-                    map.removeLayer(layer);
-                }
-            });
-
-            // Рендер закладів
-            places.forEach((p, idx) => {
-                const rawLat = p['Широта'] || p['Lat'] || p['lat'] || p['latitude'] || p['Координати'];
-                const rawLng = p['Довгота'] || p['Lng'] || p['lng'] || p['longitude'];
-
-                let lat = parseFloat(rawLat);
-                let lng = parseFloat(rawLng);
-
-                if (isNaN(lat) && typeof rawLat === 'string' && rawLat.includes(',')) {
-                    const parts = rawLat.split(',');
-                    lat = parseFloat(parts[0]);
-                    lng = parseFloat(parts[1]);
-                }
-
-                if (!isNaN(lat) && !isNaN(lng)) {
-                    const venueIcon = L.divIcon({
-                        className: 'venue-marker',
-                        html: `<div style="background: linear-gradient(135deg, #a855f7, #7e22ce); color: #fff; padding: 6px 10px; border-radius: 20px; font-weight: bold; font-size: 11px; white-space: nowrap; box-shadow: 0 4px 10px rgba(168,85,247,0.6); border: 1px solid #fff; cursor: pointer;">🍸 ${p['Назва закладу'] || p['Назва'] || 'Заклад'}</div>`,
-                        iconAnchor: [30, 15]
                     });
 
                     const marker = L.marker([lat, lng], { icon: venueIcon }).addTo(map);
