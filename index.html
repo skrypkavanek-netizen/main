@@ -586,12 +586,26 @@
         // Визначення відповідного емодзі за категорією закладу
         function getCategoryIcon(categoryStr) {
             const cat = String(categoryStr || '').toLowerCase();
-            if (cat.includes('бар') || cat.includes('пиво') || cat.includes('паб')) return '🍻';
-            if (cat.includes('live') || cat.includes('концерт') || cat.includes('музика') || cat.includes('рок')) return '🎸';
-            if (cat.includes('стендап') || cat.includes('шоу') || cat.includes('комедія')) return '🎤';
-            if (cat.includes('кава') || cat.includes('кав\'ярня')) return '☕';
-            if (cat.includes('ресторан') || cat.includes('вино')) return '🍷';
-            return '🍸'; // За замовчуванням
+            
+            // Бари, пави, пиво
+            if (cat.includes('бар') || cat.includes('пиво') || cat.includes('паб') || cat.includes('beer')) return '🍻';
+            
+            // Live музика, концерти, рок
+            if (cat.includes('live') || cat.includes('концерт') || cat.includes('музика') || cat.includes('рок') || cat.includes('music')) return '🎸';
+            
+            // Стендап, шоу, комедія
+            if (cat.includes('стендап') || cat.includes('шоу') || cat.includes('комедія') || cat.includes('standup')) return '🎤';
+            
+            // Кав'ярні, кава
+            if (cat.includes('кава') || cat.includes('кав\'ярня') || cat.includes('coffee')) return '☕';
+            
+            // Ресторани, вино, вечері
+            if (cat.includes('ресторан') || cat.includes('вино') || cat.includes('wine') || cat.includes('їжа')) return '🍷';
+            
+            // Клуб, танці, нічне життя
+            if (cat.includes('клуб') || cat.includes('танці') || cat.includes('party') || cat.includes('вечірка')) return '🪩';
+            
+            return '🍸'; // Універсальний значок за замовчуванням
         }
 
         // Створення HTML-коду маркера відповідно до масштабного рівня та категорії
